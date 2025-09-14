@@ -65,4 +65,27 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const userDetails = async (req, res) => {
+  const userResult = await User.findOne({
+    where: { id: req.userId },
+    attributes: [
+      "id",
+      "email",
+      "mobilenumber",
+      "createdAt",
+      "updatedAt",
+      "username",
+    ],
+  });
+  if (!userResult) {
+    res.status(404).send({ code: 404, message: "User not found" });
+  } else {
+    res.status(200).send({
+      code: 200,
+      message: "User details fetched successfully",
+      data: userResult,
+    });
+  }
+};
+
+module.exports = { register, login, userDetails };
