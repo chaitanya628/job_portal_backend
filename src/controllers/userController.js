@@ -1,25 +1,26 @@
 const { User, Sequelize } = require("../../models");
 const { Op } = Sequelize;
+const bcrypt = require("bcryptjs");
 
 const register = async (req, res) => {
   try {
-    const { username, email, mobilenumber } = req.body;
+    const { username, email, mobilenumber, password } = req.body;
 
     const existingUser = await User.findOne({
       where: {
-        [Op.or]: [{ email }, { username }, { mobilenumber }],
+        [Op.or]: [{ email }, { mobilenumber }],
       },
     });
     if (existingUser) {
       return res.status(409).json({
-        message:
-          "User already exists with provided username, email, or mobile number.",
+        message: "User already exists with provided email, or mobile number.",
       });
     }
     const newUser = await User.create({
       username,
       email,
       mobilenumber,
+      password: bcrypt.hashSync(password),
     });
     return res
       .status(201)
