@@ -1,6 +1,8 @@
 const { User, Sequelize } = require("../../models");
 const { Op } = Sequelize;
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const register = async (req, res) => {
   try {
@@ -32,4 +34,35 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = { register };
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({
+      where: { username: username },
+    });
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found", data: null });
+    }
+    const passwordCheck = bcrypt.compareSync(password, user.password);
+    if (!passwordCheck) {
+      return res
+        .status(401)
+        .send({ message: "Invalid credentials", data: null });
+    }
+
+    const accesstoken = jwt.sign(
+      { userId: user.id, username: user.username },
+      process.env.ACCESS_TOKEN_SECRET
+    );
+    return res.status(200).send({
+      message: "Logged in successfully",
+      data: { userId: user.id, userName: user.username, token: accesstoken },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
+  }
+};
+
+module.exports = { register, login };
